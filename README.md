@@ -101,4 +101,5 @@ Este projeto foi construído com as tecnologias mais recentes do ecossistema web
 
 ## 📝 Licença
 
-Este projeto é de uso pessoal e educacional.
+Este projeto está licenciado sob a licença MIT.  
+Sinta-se à vontade para usar, estudar, modificar e compartilhar para fins educacionais.
