@@ -1,7 +1,7 @@
 # StudyFlow 🎓
 
-> **Your Academic Recovery Companion.**  
-> StudyFlow is an intelligent study assistant designed to help students organize their academic life, catch up on lost content, and stay motivated.
+> **Seu companheiro de recuperação acadêmica.**  
+> O StudyFlow é um assistente de estudos inteligente, projetado para ajudar estudantes a organizar sua vida acadêmica, recuperar conteúdos perdidos e manter a motivação.
 
 ---
 
@@ -12,11 +12,11 @@
 
 | Dashboard | Planejador |
 |:---:|:---:|
-| *(Adicione um print do Dashboard aqui)* | *(Adicione um print do Planejador aqui)* |
+| *![Dashboard](public/demo1.png)* | *![Planejador](public/demo2.png)* |
 
 | Cursos | Modo Escuro |
 |:---:|:---:|
-| *(Adicione um print da Aula aqui)* | *(Adicione um print do Dark Mode aqui)* |
+| *![Cursos](public/demo3.png)* | *![Darkmode](public/demo4.png)* |
 
 ---
 
