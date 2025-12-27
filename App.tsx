@@ -12,6 +12,7 @@ import LinksPage from './components/LinksPage';
 
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
+import ForgotPasswordPage from './components/ForgotPasswordPage';
 import AdminPage from './components/AdminPage';
 
 import Layout from './components/Layout';
@@ -25,6 +26,7 @@ const App: React.FC = () => {
                         <Route path="/" element={<LandingPage />} />
                         <Route path="/login" element={<LoginPage />} />
                         <Route path="/register" element={<RegisterPage />} />
+                        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
                         {/* Wrapper for authenticated routes with persistent Navbar */}
                         <Route element={<Layout />}>

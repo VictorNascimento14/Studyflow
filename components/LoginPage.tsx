@@ -69,7 +69,7 @@ const LoginPage: React.FC = () => {
                         <label className="flex flex-col w-full">
                             <div className="flex justify-between items-center pb-2">
                                 <span className="text-[#111418] dark:text-white text-sm font-medium leading-normal">Senha</span>
-                                <a href="#" className="text-sm font-medium text-primary hover:underline">Esqueceu a senha?</a>
+                                <Link to="/forgot-password" className="text-sm font-medium text-primary hover:underline">Esqueceu a senha?</Link>
                             </div>
                             <input
                                 className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111418] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/50 border border-[#dbe0e6] dark:border-[#374151] bg-white dark:bg-[#1a202c] focus:border-primary h-12 placeholder:text-[#9ca3af] px-4 text-base font-normal leading-normal transition-all"
