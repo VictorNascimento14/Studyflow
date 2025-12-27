@@ -184,7 +184,7 @@ const LandingPage: React.FC = () => {
                             <a className="hover:text-primary" href="#">Contato</a>
                         </div>
                         <div className="text-sm text-gray-400">
-                            © 2023 StudyFlow. Todos os direitos reservados.
+                            © 2025 StudyFlow. Todos os direitos reservados.
                         </div>
                     </div>
                 </footer>
