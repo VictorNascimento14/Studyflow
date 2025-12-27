@@ -101,7 +101,7 @@ const PlannerPage: React.FC = () => {
 
     return (
         <>
-            <header className="flex lg:hidden items-center justify-between p-4 bg-white dark:bg-[#111418] border-b border-[#e5e7eb] dark:border-[#2a3441]">
+            <header className={`flex items-center justify-between p-4 bg-white dark:bg-[#111418] border-b border-[#e5e7eb] dark:border-[#2a3441] ${user ? 'lg:hidden' : ''}`}>
                 <div className="flex items-center gap-2 text-[#111418] dark:text-white">
                     <div className="size-8 text-primary">
                         <span className="material-symbols-outlined text-3xl">school</span>

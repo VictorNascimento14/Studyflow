@@ -1,8 +1,11 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTheme } from '../contexts/ThemeContext';
 
 const LandingPage: React.FC = () => {
+    const { isDarkMode, toggleTheme } = useTheme();
+
     return (
         <div className="bg-background-light dark:bg-background-dark font-display text-[#111418] dark:text-white min-h-screen flex flex-col overflow-x-hidden">
             <header className="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#e5e7eb] dark:border-b-[#2a3441] bg-white dark:bg-[#111418] px-10 py-3">
@@ -13,6 +16,15 @@ const LandingPage: React.FC = () => {
                     <h2 className="text-[#111418] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">StudyFlow</h2>
                 </div>
                 <div className="flex items-center gap-4">
+                    <button
+                        onClick={toggleTheme}
+                        className="size-10 rounded-full bg-gray-100 dark:bg-[#2a3441] flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#323d4d] transition-colors"
+                        aria-label="Alternar tema"
+                    >
+                        <span className="material-symbols-outlined text-xl">
+                            {isDarkMode ? 'light_mode' : 'dark_mode'}
+                        </span>
+                    </button>
 
                     <Link to="/login" className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-transparent text-[#111418] dark:text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-gray-100 dark:hover:bg-[#2a3441] transition-colors border border-transparent hover:border-gray-200 dark:hover:border-gray-700">
                         <span className="truncate">Entrar</span>

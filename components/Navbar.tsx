@@ -24,6 +24,8 @@ const Navbar: React.FC = () => {
         navigate('/login');
     };
 
+    if (!user) return null;
+
     return (
         <>
             {/* Desktop/Tablet Top Navbar */}
