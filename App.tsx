@@ -13,6 +13,7 @@ import LinksPage from './components/LinksPage';
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
 import ForgotPasswordPage from './components/ForgotPasswordPage';
+import EmailConfirmationPage from './components/EmailConfirmationPage';
 import AdminPage from './components/AdminPage';
 
 import Layout from './components/Layout';
@@ -27,6 +28,7 @@ const App: React.FC = () => {
                         <Route path="/login" element={<LoginPage />} />
                         <Route path="/register" element={<RegisterPage />} />
                         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                        <Route path="/email-confirmed" element={<EmailConfirmationPage />} />
 
                         {/* Wrapper for authenticated routes with persistent Navbar */}
                         <Route element={<Layout />}>
