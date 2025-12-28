@@ -17,6 +17,7 @@ import EmailConfirmationPage from './components/EmailConfirmationPage';
 import AdminPage from './components/AdminPage';
 
 import Layout from './components/Layout';
+import PrivateRoute from './components/PrivateRoute';
 
 const App: React.FC = () => {
     return (
@@ -30,13 +31,15 @@ const App: React.FC = () => {
                         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                         <Route path="/email-confirmed" element={<EmailConfirmationPage />} />
 
-                        {/* Wrapper for authenticated routes with persistent Navbar */}
-                        <Route element={<Layout />}>
-                            <Route path="/planner" element={<PlannerPage />} />
-                            <Route path="/dashboard" element={<DashboardPage />} />
-                            <Route path="/course" element={<CoursePage />} />
-                            <Route path="/links" element={<LinksPage />} />
-                            <Route path="/admin" element={<AdminPage />} />
+                        {/* Rotas protegidas por autenticação */}
+                        <Route element={<PrivateRoute />}>
+                            <Route element={<Layout />}>
+                                <Route path="/planner" element={<PlannerPage />} />
+                                <Route path="/dashboard" element={<DashboardPage />} />
+                                <Route path="/course" element={<CoursePage />} />
+                                <Route path="/links" element={<LinksPage />} />
+                                <Route path="/admin" element={<AdminPage />} />
+                            </Route>
                         </Route>
 
                         <Route path="*" element={<Navigate to="/" />} />
