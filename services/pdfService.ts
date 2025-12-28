@@ -155,7 +155,7 @@ export const exportPlanToPDF = (plan: AIStudyPlan) => {
 
         autoTable(doc, {
             startY: currentY,
-            head: [['Materia', 'Conteudo', 'Tempo', 'Prior.', 'Tecnica']],
+            head: [['Matéria', 'Conteúdo', 'Tempo', 'Prior.', 'Técnica']],
             body: tableRows,
             margin: { left: 20, right: 20 },
             styles: {
@@ -221,7 +221,8 @@ export const exportPlanToPDF = (plan: AIStudyPlan) => {
     doc.setTextColor(darkText[0], darkText[1], darkText[2]);
     plan.generalTips.forEach((tip) => {
         doc.setFont('helvetica', 'normal');
-        const cleanTip = tip.replace(/[^\x00-\x7F]/g, '').trim(); // Remove emojis
+        // Remove apenas emojis, mantendo acentuação
+        const cleanTip = tip.replace(/[\u{1F600}-\u{1F6FF}]/gu, '').trim();
         const splitTip = doc.splitTextToSize(`> ${cleanTip}`, 165);
         doc.text(splitTip, 25, currentY);
         currentY += (splitTip.length * 6) + 4;
@@ -232,14 +233,14 @@ export const exportPlanToPDF = (plan: AIStudyPlan) => {
     doc.setFontSize(12);
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     doc.setFont('helvetica', 'bold');
-    doc.text('TECNICAS DE ESTUDO RECOMENDADAS', 20, currentY);
+    doc.text('TÉCNICAS DE ESTUDO RECOMENDADAS', 20, currentY);
     currentY += 10;
 
     const techniques = [
-        ['Pomodoro', '25 min de foco intenso + 5 min de pausa. Apos 4 ciclos, faca uma pausa maior de 15-30 min.'],
-        ['Feynman', 'Explique o conceito como se ensinasse a uma crianca. Se nao conseguir, estude mais.'],
-        ['Active Recall', 'Teste sua memoria ativamente em vez de apenas reler. Use flashcards.'],
-        ['Espacamento', 'Revise o conteudo em intervalos crescentes: 1 dia, 3 dias, 1 semana, 2 semanas.'],
+        ['Pomodoro', '25 min de foco intenso + 5 min de pausa. Após 4 ciclos, faça uma pausa maior de 15-30 min.'],
+        ['Feynman', 'Explique o conceito como se ensinasse a uma criança. Se não conseguir, estude mais.'],
+        ['Active Recall', 'Teste sua memória ativamente em vez de apenas reler. Use flashcards.'],
+        ['Espaçamento', 'Revise o conteúdo em intervalos crescentes: 1 dia, 3 dias, 1 semana, 2 semanas.'],
     ];
 
     techniques.forEach(([name, desc]) => {
@@ -273,7 +274,7 @@ export const exportPlanToPDF = (plan: AIStudyPlan) => {
         doc.setPage(i);
         doc.setFontSize(8);
         doc.setTextColor(150, 150, 150);
-        doc.text(`StudyFlow - Pagina ${i} de ${pageCount}`, 105, 290, { align: 'center' });
+        doc.text(`StudyFlow - Página ${i} de ${pageCount}`, 105, 290, { align: 'center' });
     }
 
     doc.save(`StudyFlow-Plano-${new Date().toISOString().split('T')[0]}.pdf`);

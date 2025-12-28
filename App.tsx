@@ -31,10 +31,14 @@ const App: React.FC = () => {
                         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                         <Route path="/email-confirmed" element={<EmailConfirmationPage />} />
 
-                        {/* Rotas protegidas por autenticação */}
+                        {/* Planner público */}
+                        <Route element={<Layout />}>
+                            <Route path="/planner" element={<PlannerPage />} />
+                        </Route>
+
+                        {/* Demais rotas protegidas */}
                         <Route element={<PrivateRoute />}>
                             <Route element={<Layout />}>
-                                <Route path="/planner" element={<PlannerPage />} />
                                 <Route path="/dashboard" element={<DashboardPage />} />
                                 <Route path="/course" element={<CoursePage />} />
                                 <Route path="/links" element={<LinksPage />} />
