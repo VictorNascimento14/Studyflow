@@ -1,6 +1,10 @@
+
 import { supabase } from './supabaseClient';
 import type { Subject, CourseNote } from '../types';
 
+
+
+// Tipos
 export interface UserProfile {
     id: string;
     full_name: string | null;
@@ -18,6 +22,34 @@ export interface StudyPlanItem {
 }
 
 export const dataService = {
+    // Plano completo em JSON
+    async saveUserFullPlan(userId: string, subjects: Subject[], hoursPerDay: number, studyDays: number[]) {
+        const { error } = await supabase
+            .from('user_study_plan')
+            .upsert({
+                user_id: userId,
+                subjects: JSON.stringify(subjects),
+                hours_per_day: hoursPerDay,
+                study_days: JSON.stringify(studyDays),
+                updated_at: new Date().toISOString(),
+            }, { onConflict: 'user_id' });
+        if (error) throw error;
+    },
+
+    async getUserFullPlan(userId: string) {
+        const { data, error } = await supabase
+            .from('user_study_plan')
+            .select('*')
+            .eq('user_id', userId)
+            .maybeSingle();
+        if (error) throw error;
+        if (!data) return null;
+        return {
+            subjects: JSON.parse(data.subjects),
+            hoursPerDay: data.hours_per_day,
+            studyDays: JSON.parse(data.study_days),
+        };
+    },
     // User Profile
     async getProfile(userId: string) {
         const { data, error } = await supabase

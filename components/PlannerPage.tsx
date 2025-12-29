@@ -7,7 +7,7 @@ import { generateStudyPlanLocal } from '../services/planCalculator';
 import { exportPlanToPDF } from '../services/pdfService';
 
 const initialSubjects: Subject[] = [
-    { id: 1, name: '', missedClasses: 0 },
+    { id: 1, name: '', missedClasses: 0, priority: 'Média' },
 ];
 
 const dayLabels = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
@@ -37,7 +37,7 @@ const PlannerPage: React.FC = () => {
     };
 
     const addSubject = () => {
-        setSubjects([...subjects, { id: Date.now(), name: '', missedClasses: 0 }]);
+        setSubjects([...subjects, { id: Date.now(), name: '', missedClasses: 0, priority: 'Média' }]);
     };
 
     const removeSubject = (id: number) => {
@@ -77,6 +77,7 @@ const PlannerPage: React.FC = () => {
             if (user) {
                 // Member Flow: Save to Supabase
                 await dataService.saveStudyPlan(user.id, validSubjects);
+                await dataService.saveUserFullPlan(user.id, validSubjects, hoursPerDay, studyDays);
                 await dataService.createProfile({
                     id: user.id,
                     full_name: user.user_metadata?.full_name || null,
@@ -101,23 +102,17 @@ const PlannerPage: React.FC = () => {
 
     return (
         <>
-            <header className={`flex items-center justify-between p-4 bg-white dark:bg-[#111418] border-b border-[#e5e7eb] dark:border-[#2a3441] ${user ? 'lg:hidden' : ''}`}>
-                <div className="flex items-center gap-2 text-[#111418] dark:text-white">
-                    <div className="size-8 text-primary">
-                        <span className="material-symbols-outlined text-3xl">school</span>
-                    </div>
-                    <h2 className="text-[#111418] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">StudyFlow</h2>
-                </div>
-                <div className="flex items-center gap-4">
-                    <Link to={user ? "/dashboard" : "/"} className="flex items-center justify-center gap-2 h-10 px-4 rounded-lg text-sm font-bold text-[#111418] dark:text-white hover:bg-gray-100 dark:hover:bg-[#2a3441] transition-colors">
-                        <span className="material-symbols-outlined">arrow_back</span>
-                        <span>Voltar</span>
-                    </Link>
-                </div>
-            </header>
-            <main className="flex-1 flex justify-center py-8 px-4 sm:px-6 lg:px-8 pb-24 lg:pb-8">
-                <div className="w-full max-w-[800px] flex flex-col gap-6">
+            {/* Botão de voltar fixo no topo da área do planner */}
+            <div style={{ position: 'sticky', top: 0, zIndex: 20, background: 'inherit' }} className="w-full max-w-[800px] mx-auto pt-2 pb-1 flex justify-start">
+                <Link to="/dashboard" className="flex items-center gap-2 h-9 px-3 rounded-lg text-sm font-bold text-[#111418] dark:text-white bg-white dark:bg-[#111418] border border-[#e5e7eb] dark:border-[#2a3441] hover:bg-gray-100 dark:hover:bg-[#2a3441] transition-colors shadow-sm">
+                    <span className="material-symbols-outlined text-xl">arrow_back_ios_new</span>
+                    <span>Voltar para Dashboard</span>
+                </Link>
+            </div>
+            <main className="flex-1 flex justify-center py-2 px-2 sm:px-4 lg:px-6 pb-8 lg:pb-4">
+                <div className="w-full max-w-[800px] flex flex-col gap-4">
                     <div className="bg-white dark:bg-[#111418] p-8 rounded-xl shadow-sm border border-[#e5e7eb] dark:border-[#2a3441]">
+
                         <div className="flex flex-col gap-2">
                             <div className="flex justify-between items-start">
                                 <h1 className="text-[#111418] dark:text-white text-3xl font-black leading-tight tracking-[-0.033em]">Planejador de Recuperação</h1>
@@ -186,6 +181,18 @@ const PlannerPage: React.FC = () => {
                                                     <span className="material-symbols-outlined text-lg">add</span>
                                                 </button>
                                             </div>
+                                        </label>
+                                        <label className="flex flex-col w-full md:w-40">
+                                            <span className="text-[#111418] dark:text-white text-sm font-medium leading-normal pb-2">Prioridade</span>
+                                            <select
+                                                className="form-select w-full h-12 rounded-lg border border-[#dbe0e6] dark:border-[#374151] bg-white dark:bg-[#1a202c] text-[#111418] dark:text-white px-3"
+                                                value={subject.priority}
+                                                onChange={e => handleSubjectChange(subject.id, 'priority', e.target.value as 'Alta' | 'Média' | 'Baixa')}
+                                            >
+                                                <option value="Alta">Alta</option>
+                                                <option value="Média">Média</option>
+                                                <option value="Baixa">Baixa</option>
+                                            </select>
                                         </label>
                                         <button
                                             aria-label="Remover disciplina"

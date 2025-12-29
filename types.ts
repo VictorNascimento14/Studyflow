@@ -3,6 +3,7 @@ export interface Subject {
   id: number;
   name: string;
   missedClasses: number;
+  priority: 'Alta' | 'Média' | 'Baixa';
 }
 
 export interface LinkResource {

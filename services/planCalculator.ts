@@ -173,18 +173,29 @@ export function generateStudyPlanLocal(
     let techniqueIndex = 0;
     let tipIndex = 0;
 
+    // Garante que todas as matérias apareçam pelo menos uma vez no cronograma
+    let subjectsUsed: Set<string> = new Set();
     for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
         if (!studyDays.includes(dayIdx)) continue;
 
         const dayTopics: AIStudyPlan['weeklySchedule'][0]['topics'] = [];
         let remainingMinutes = minutesPerDay;
 
-        // Distribute subjects across the day (max 3-4 subjects per day for focus)
-        const subjectsToday = Math.min(sortedSubjects.length, 3);
+        // Se ainda não usou todas as matérias, priorize as que faltam
+        let subjectsTodayArr: Subject[] = [];
+        const unusedSubjects = sortedSubjects.filter(s => !subjectsUsed.has(s.name));
+        if (unusedSubjects.length > 0) {
+            subjectsTodayArr = unusedSubjects.slice(0, Math.min(unusedSubjects.length, 3));
+        } else {
+            subjectsTodayArr = sortedSubjects.slice(0, Math.min(sortedSubjects.length, 3));
+        }
+
+        const subjectsToday = subjectsTodayArr.length;
         const minutesPerSubject = Math.floor(remainingMinutes / subjectsToday);
 
         for (let i = 0; i < subjectsToday && remainingMinutes >= 30; i++) {
-            const subject = sortedSubjects[i % sortedSubjects.length];
+            const subject = subjectsTodayArr[i % subjectsTodayArr.length];
+            subjectsUsed.add(subject.name);
             const classesToCover = Math.ceil(minutesPerSubject / estimatedMinutesPerClass);
             const sessionMinutes = Math.min(minutesPerSubject, remainingMinutes);
 
@@ -195,7 +206,7 @@ export function generateStudyPlanLocal(
                 subject: subject.name,
                 subtopic: `Módulo ${i + 1}: Revisão de ${classesToCover} aula${classesToCover > 1 ? 's' : ''}`,
                 duration: formatDuration(sessionMinutes),
-                priority: getPriority(subject.missedClasses || 0, maxClasses),
+                priority: subject.priority || getPriority(subject.missedClasses || 0, maxClasses),
                 tips: studyTips[tipIndex % studyTips.length],
                 technique: `${technique.name}: ${technique.desc}`,
             });

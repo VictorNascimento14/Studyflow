@@ -1,7 +1,12 @@
-import React, { useEffect, useState } from 'react';
+
+
+import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from './Navbar';
 import { dataService, StudyPlanItem } from '../services/dataService';
+import { generateStudyPlanLocal } from '../services/planCalculator';
+import { exportPlanToPDF } from '../services/pdfService';
+import type { Subject } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 
 const DashboardPage: React.FC = () => {
@@ -10,6 +15,42 @@ const DashboardPage: React.FC = () => {
     const [quickNote, setQuickNote] = useState('');
     const [loading, setLoading] = useState(true);
     const [savingNote, setSavingNote] = useState(false);
+
+
+    // Função para baixar PDF do plano
+    // Função para baixar PDF do plano
+    const handleDownloadPDF = async () => {
+        if (!user) return;
+        try {
+            const fullPlan = await dataService.getUserFullPlan(user.id);
+            if (fullPlan && fullPlan.subjects && fullPlan.subjects.length > 0) {
+                const plan = generateStudyPlanLocal(fullPlan.subjects, fullPlan.hoursPerDay, fullPlan.studyDays);
+                exportPlanToPDF(plan);
+            } else {
+                if (!planItems || planItems.length === 0) return;
+                const subjectsMap: { [name: string]: Subject } = {};
+                planItems.forEach(item => {
+                    if (!subjectsMap[item.title]) {
+                        subjectsMap[item.title] = {
+                            id: item.id,
+                            name: item.title,
+                            missedClasses: 1,
+                            priority: 'Média',
+                        };
+                    } else {
+                        subjectsMap[item.title].missedClasses += 1;
+                    }
+                });
+                const subjects = Object.values(subjectsMap);
+                const plan = generateStudyPlanLocal(subjects, 3.5, [0,1,2,3,4,6]);
+                exportPlanToPDF(plan);
+            }
+        } catch (e) {
+            alert('Erro ao gerar PDF do plano. Tente novamente.');
+        }
+    };
+
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -88,6 +129,18 @@ const DashboardPage: React.FC = () => {
                     <div className="lg:col-span-8 flex flex-col gap-6">
                         {/* Summary Card */}
                         <div className="bg-white dark:bg-[#111418] rounded-xl p-6 shadow-sm border border-[#e5e7eb] dark:border-[#2a3441]">
+                                                        {/* Botão de download do PDF */}
+                                                        {totalAulas > 0 && (
+                                                            <div className="flex justify-end mb-2">
+                                                                <button
+                                                                    onClick={handleDownloadPDF}
+                                                                    className="flex items-center gap-2 px-5 py-2 rounded-lg bg-primary text-white font-bold hover:bg-blue-700 transition-colors shadow-sm"
+                                                                >
+                                                                    <span className="material-symbols-outlined">download</span>
+                                                                    Baixar PDF do Plano
+                                                                </button>
+                                                            </div>
+                                                        )}
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                                 <div>
                                     <h1 className="text-2xl font-bold text-[#111418] dark:text-white">Seu Plano de Recuperação</h1>

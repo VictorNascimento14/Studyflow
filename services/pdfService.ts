@@ -245,6 +245,26 @@ export const exportPlanToPDF = (plan: AIStudyPlan) => {
 
     techniques.forEach(([name, desc]) => {
         doc.setFontSize(10);
+
+                // ===== PAGE: ALL SUBJECTS =====
+                if (plan.summary.totalSubjects > 0 && plan.weeklySchedule.length > 0) {
+                    doc.addPage();
+                    let y = 25;
+                    doc.setFontSize(14);
+                    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('TODAS AS MATÉRIAS DO PLANO', 20, y);
+                    y += 10;
+                    doc.setFontSize(10);
+                    doc.setTextColor(darkText[0], darkText[1], darkText[2]);
+                    doc.setFont('helvetica', 'normal');
+                    // Extrai todas as matérias únicas do cronograma
+                    const allSubjects = Array.from(new Set(plan.weeklySchedule.flatMap(day => day.topics.map(t => t.subject))));
+                    allSubjects.forEach((subject, idx) => {
+                        doc.text(`- ${subject}`, 25, y + idx * 7);
+                    });
+                    y += allSubjects.length * 7 + 5;
+                }
         doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
         doc.setFont('helvetica', 'bold');
         doc.text(`${name}:`, 25, currentY);
