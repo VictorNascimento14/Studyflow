@@ -801,57 +801,6 @@ const CoursePage: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* Resumo elaborado da unidade */}
-                                <div className="mt-12">
-                                    <div className="flex items-center mb-2">
-                                        <span className="material-symbols-outlined text-primary mr-2">description</span>
-                                        <h3 className="text-xl font-bold text-[#111418] dark:text-white">Resumo elaborado da unidade</h3>
-                                    </div>
-                                    <p className="text-sm text-gray-500 mb-4">Faça um resumo detalhado dos principais pontos desta unidade para facilitar sua revisão.</p>
-                                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-5 shadow-sm space-y-2">
-                                        {isAdmin ? (
-                                            <>
-                                                <textarea
-                                                    className="w-full min-h-[120px] bg-transparent text-gray-700 dark:text-gray-200 outline-none resize-vertical p-2 border border-dashed border-gray-300 dark:border-gray-700 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary"
-                                                    placeholder="Adicione aqui um resumo elaborado sobre o conteúdo desta unidade..."
-                                                    value={summaryText}
-                                                    onChange={e => setSummaryText(e.target.value)}
-                                                />
-                                                <div className="flex items-center gap-3">
-                                                    <button
-                                                        onClick={handleSaveSummary}
-                                                        className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-blue-600 disabled:opacity-50 transition-all flex items-center gap-2"
-                                                        disabled={saveStatus === 'saving' || summaryText === selectedUnit.summary}
-                                                    >
-                                                        {saveStatus === 'saving' ? (
-                                                            <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                                        ) : (
-                                                            <span className="material-symbols-outlined text-lg">save</span>
-                                                        )}
-                                                        {saveStatus === 'saving' ? 'Salvando...' : 'Salvar Resumo'}
-                                                    </button>
-                                                    {saveStatus === 'success' && (
-                                                        <span className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center animate-[fadeIn_0.3s_ease-out] border border-green-200 dark:border-green-800">
-                                                            <span className="material-symbols-outlined text-lg mr-1.5">check_circle</span>
-                                                            Salvo com sucesso!
-                                                        </span>
-                                                    )}
-                                                    {saveStatus === 'error' && (
-                                                        <span className="text-red-500 text-sm font-bold flex items-center animate-[fadeIn_0.3s_ease-out]">
-                                                            <span className="material-symbols-outlined text-lg mr-1">error</span>
-                                                            Erro ao salvar
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </>
-                                        ) : (
-                                            <p className="text-gray-700 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
-                                                {selectedUnit.summary || "Resumo disponível apenas para visualização. Entre em contato com o administrador para sugerir alterações."}
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-
                                 {/* Links importantes de atividades da unidade */}
                                 <div className="mt-12">
                                     <div className="flex items-center justify-between mb-2">
@@ -910,6 +859,57 @@ const CoursePage: React.FC = () => {
                                             <span className="text-sm text-gray-400">Nenhum link adicionado ainda.</span>
                                         </div>
                                     )}
+                                </div>
+
+                                {/* Resumo elaborado da unidade */}
+                                <div className="mt-12">
+                                    <div className="flex items-center mb-2">
+                                        <span className="material-symbols-outlined text-primary mr-2">description</span>
+                                        <h3 className="text-xl font-bold text-[#111418] dark:text-white">Resumo elaborado da unidade</h3>
+                                    </div>
+                                    <p className="text-sm text-gray-500 mb-4">Faça um resumo detalhado dos principais pontos desta unidade para facilitar sua revisão.</p>
+                                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-5 shadow-sm space-y-2">
+                                        {isAdmin ? (
+                                            <>
+                                                <textarea
+                                                    className="w-full min-h-[120px] bg-transparent text-gray-700 dark:text-gray-200 outline-none resize-vertical p-2 border border-dashed border-gray-300 dark:border-gray-700 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary"
+                                                    placeholder="Adicione aqui um resumo elaborado sobre o conteúdo desta unidade..."
+                                                    value={summaryText}
+                                                    onChange={e => setSummaryText(e.target.value)}
+                                                />
+                                                <div className="flex items-center gap-3">
+                                                    <button
+                                                        onClick={handleSaveSummary}
+                                                        className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-blue-600 disabled:opacity-50 transition-all flex items-center gap-2"
+                                                        disabled={saveStatus === 'saving' || summaryText === selectedUnit.summary}
+                                                    >
+                                                        {saveStatus === 'saving' ? (
+                                                            <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                        ) : (
+                                                            <span className="material-symbols-outlined text-lg">save</span>
+                                                        )}
+                                                        {saveStatus === 'saving' ? 'Salvando...' : 'Salvar Resumo'}
+                                                    </button>
+                                                    {saveStatus === 'success' && (
+                                                        <span className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center animate-[fadeIn_0.3s_ease-out] border border-green-200 dark:border-green-800">
+                                                            <span className="material-symbols-outlined text-lg mr-1.5">check_circle</span>
+                                                            Salvo com sucesso!
+                                                        </span>
+                                                    )}
+                                                    {saveStatus === 'error' && (
+                                                        <span className="text-red-500 text-sm font-bold flex items-center animate-[fadeIn_0.3s_ease-out]">
+                                                            <span className="material-symbols-outlined text-lg mr-1">error</span>
+                                                            Erro ao salvar
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <p className="text-gray-700 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
+                                                {selectedUnit.summary || "Resumo disponível apenas para visualização. Entre em contato com o administrador para sugerir alterações."}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         ) : (
