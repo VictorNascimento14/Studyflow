@@ -40,4 +40,5 @@ export interface CourseNote {
 export interface UnitLink {
   title: string;
   url: string;
+  icon?: string;
 }

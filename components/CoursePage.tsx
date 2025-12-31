@@ -65,7 +65,7 @@ const CoursePage: React.FC = () => {
     // Admin content state
     const [summaryText, setSummaryText] = useState('');
     const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
-    const [newLink, setNewLink] = useState<UnitLink>({ title: '', url: '' });
+    const [newLink, setNewLink] = useState<UnitLink>({ title: '', url: '', icon: 'link' });
     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
 
     // Organization State
@@ -822,37 +822,57 @@ const CoursePage: React.FC = () => {
 
                                     {(selectedUnit.important_links && selectedUnit.important_links.length > 0) ? (
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            {selectedUnit.important_links.map((link, index) => (
-                                                <div key={index} className="relative group">
-                                                    <a
-                                                        href={link.url}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="flex items-center p-4 bg-white dark:bg-[#1a202c] border border-gray-200 dark:border-gray-700 rounded-xl hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300 w-full"
-                                                    >
-                                                        <div className="size-10 rounded-full bg-primary/10 text-primary flex items-center justify-center mr-4 group-hover:bg-primary group-hover:text-white transition-colors">
-                                                            <span className="material-symbols-outlined">link</span>
-                                                        </div>
-                                                        <div className="flex-1 min-w-0 text-left">
-                                                            <h4 className="font-bold text-sm text-gray-800 dark:text-gray-200 truncate group-hover:text-primary transition-colors">{link.title}</h4>
-                                                            <p className="text-xs text-gray-500 truncate mt-0.5">Clique para acessar</p>
-                                                        </div>
-                                                        <span className="material-symbols-outlined text-gray-400 group-hover:text-primary group-hover:translate-x-1 transition-all">arrow_forward</span>
-                                                    </a>
-                                                    {isAdmin && (
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.preventDefault();
-                                                                handleDeleteLink(index);
-                                                            }}
-                                                            className="absolute -top-2 -right-2 bg-red-500 text-white p-1.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10"
-                                                            title="Remover link"
+                                            {selectedUnit.important_links.map((link, index) => {
+                                                const isImportant = link.icon === 'campaign'; // Super important icon strategy
+                                                return (
+                                                    <div key={index} className="relative group">
+                                                        <a
+                                                            href={link.url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className={`
+                                                                flex items-center p-4 rounded-xl border transition-all duration-300 w-full relative overflow-hidden
+                                                                ${isImportant
+                                                                    ? 'bg-red-50 dark:bg-red-950/30 border-red-500 dark:border-red-500 hover:border-red-600 hover:shadow-lg hover:shadow-red-500/20 ring-1 ring-red-500/20'
+                                                                    : 'bg-white dark:bg-[#1a202c] border-gray-200 dark:border-gray-700 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5'}
+                                                                hover:-translate-y-1
+                                                            `}
                                                         >
-                                                            <span className="material-symbols-outlined text-xs font-bold leading-none">close</span>
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            ))}
+                                                            {isImportant && <div className="absolute right-0 top-0 w-16 h-16 bg-gradient-to-bl from-red-500/10 to-transparent -mr-8 -mt-8 rounded-full pointer-events-none" />}
+
+                                                            <div className={`
+                                                                size-10 rounded-full flex items-center justify-center mr-4 transition-all duration-300 shadow-sm
+                                                                ${isImportant
+                                                                    ? 'bg-red-600 text-white shadow-red-500/30 group-hover:scale-110 group-hover:bg-red-700'
+                                                                    : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white'}
+                                                            `}>
+                                                                <span className="material-symbols-outlined">{link.icon || 'link'}</span>
+                                                            </div>
+                                                            <div className="flex-1 min-w-0 text-left relative z-10">
+                                                                <h4 className={`font-bold text-sm truncate transition-colors ${isImportant ? 'text-red-700 dark:text-red-400 group-hover:text-red-800' : 'text-gray-800 dark:text-gray-200 group-hover:text-primary'}`}>
+                                                                    {link.title}
+                                                                </h4>
+                                                                <p className={`text-xs truncate mt-0.5 ${isImportant ? 'text-red-600 font-semibold' : 'text-gray-500'}`}>
+                                                                    {isImportant ? 'Importante • Clique para acessar' : 'Clique para acessar'}
+                                                                </p>
+                                                            </div>
+                                                            <span className={`material-symbols-outlined transition-all group-hover:translate-x-1 ${isImportant ? 'text-red-500 group-hover:text-red-700' : 'text-gray-400 group-hover:text-primary'}`}>arrow_forward</span>
+                                                        </a>
+                                                        {isAdmin && (
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    handleDeleteLink(index);
+                                                                }}
+                                                                className="absolute -top-2 -right-2 bg-red-500 text-white p-1.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10"
+                                                                title="Remover link"
+                                                            >
+                                                                <span className="material-symbols-outlined text-xs font-bold leading-none">close</span>
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     ) : (
                                         <div className="text-center py-6 bg-gray-50 dark:bg-gray-800/30 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
@@ -1024,6 +1044,33 @@ const CoursePage: React.FC = () => {
                                     value={newLink.url}
                                     onChange={e => setNewLink({ ...newLink, url: e.target.value })}
                                 />
+                            </div>
+                            <div>
+                                <label className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 block">Ícone</label>
+                                <div className="flex gap-3">
+                                    {[
+                                        { icon: 'link', label: 'Padrão' },
+                                        { icon: 'play_circle', label: 'Vídeo' },
+                                        { icon: 'description', label: 'Doc' },
+                                        { icon: 'campaign', label: 'Importante' }
+                                    ].map((item) => (
+                                        <button
+                                            key={item.icon}
+                                            onClick={() => setNewLink({ ...newLink, icon: item.icon })}
+                                            className={`
+                                                flex flex-col items-center justify-center gap-1 p-3 rounded-xl border transition-all w-20
+                                                ${newLink.icon === item.icon
+                                                    ? (item.icon === 'campaign' ? 'bg-red-50 border-red-500 text-red-600 dark:bg-red-900/20' : 'bg-primary/10 border-primary text-primary')
+                                                    : 'bg-white dark:bg-[#1a202c] border-gray-200 dark:border-gray-700 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800'
+                                                }
+                                            `}
+                                            title={item.label}
+                                        >
+                                            <span className="material-symbols-outlined text-2xl">{item.icon}</span>
+                                            <span className="text-[10px] font-bold">{item.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                         <div className="p-4 bg-gray-50 dark:bg-[#151c24] border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3 rounded-b-2xl">
