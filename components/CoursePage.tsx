@@ -824,6 +824,7 @@ const CoursePage: React.FC = () => {
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             {selectedUnit.important_links.map((link, index) => {
                                                 const isImportant = link.icon === 'campaign'; // Super important icon strategy
+                                                const isDoc = link.icon === 'description'; // Doc icon strategy
                                                 return (
                                                     <div key={index} className="relative group">
                                                         <a
@@ -834,29 +835,51 @@ const CoursePage: React.FC = () => {
                                                                 flex items-center p-4 rounded-xl border transition-all duration-300 w-full relative overflow-hidden
                                                                 ${isImportant
                                                                     ? 'bg-red-50 dark:bg-red-950/30 border-red-500 dark:border-red-500 hover:border-red-600 hover:shadow-lg hover:shadow-red-500/20 ring-1 ring-red-500/20'
-                                                                    : 'bg-white dark:bg-[#1a202c] border-gray-200 dark:border-gray-700 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5'}
+                                                                    : isDoc
+                                                                        ? 'bg-green-50 dark:bg-green-950/30 border-green-500 dark:border-green-500 hover:border-green-600 hover:shadow-lg hover:shadow-green-500/20 ring-1 ring-green-500/20'
+                                                                        : 'bg-white dark:bg-[#1a202c] border-gray-200 dark:border-gray-700 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5'
+                                                                }
                                                                 hover:-translate-y-1
                                                             `}
                                                         >
                                                             {isImportant && <div className="absolute right-0 top-0 w-16 h-16 bg-gradient-to-bl from-red-500/10 to-transparent -mr-8 -mt-8 rounded-full pointer-events-none" />}
+                                                            {isDoc && <div className="absolute right-0 top-0 w-16 h-16 bg-gradient-to-bl from-green-500/10 to-transparent -mr-8 -mt-8 rounded-full pointer-events-none" />}
 
                                                             <div className={`
                                                                 size-10 rounded-full flex items-center justify-center mr-4 transition-all duration-300 shadow-sm
                                                                 ${isImportant
                                                                     ? 'bg-red-600 text-white shadow-red-500/30 group-hover:scale-110 group-hover:bg-red-700'
-                                                                    : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white'}
+                                                                    : isDoc
+                                                                        ? 'bg-green-600 text-white shadow-green-500/30 group-hover:scale-110 group-hover:bg-green-700'
+                                                                        : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white'
+                                                                }
                                                             `}>
                                                                 <span className="material-symbols-outlined">{link.icon || 'link'}</span>
                                                             </div>
                                                             <div className="flex-1 min-w-0 text-left relative z-10">
-                                                                <h4 className={`font-bold text-sm truncate transition-colors ${isImportant ? 'text-red-700 dark:text-red-400 group-hover:text-red-800' : 'text-gray-800 dark:text-gray-200 group-hover:text-primary'}`}>
+                                                                <h4 className={`font-bold text-sm truncate transition-colors ${isImportant
+                                                                    ? 'text-red-700 dark:text-red-400 group-hover:text-red-800'
+                                                                    : isDoc
+                                                                        ? 'text-green-700 dark:text-green-400 group-hover:text-green-800'
+                                                                        : 'text-gray-800 dark:text-gray-200 group-hover:text-primary'
+                                                                    }`}>
                                                                     {link.title}
                                                                 </h4>
-                                                                <p className={`text-xs truncate mt-0.5 ${isImportant ? 'text-red-600 font-semibold' : 'text-gray-500'}`}>
-                                                                    {isImportant ? 'Importante • Clique para acessar' : 'Clique para acessar'}
+                                                                <p className={`text-xs truncate mt-0.5 ${isImportant
+                                                                    ? 'text-red-600 font-semibold'
+                                                                    : isDoc
+                                                                        ? 'text-green-600 font-semibold'
+                                                                        : 'text-gray-500'
+                                                                    }`}>
+                                                                    {isImportant ? 'Importante • Clique para acessar' : isDoc ? 'Documento • Clique para acessar' : 'Clique para acessar'}
                                                                 </p>
                                                             </div>
-                                                            <span className={`material-symbols-outlined transition-all group-hover:translate-x-1 ${isImportant ? 'text-red-500 group-hover:text-red-700' : 'text-gray-400 group-hover:text-primary'}`}>arrow_forward</span>
+                                                            <span className={`material-symbols-outlined transition-all group-hover:translate-x-1 ${isImportant
+                                                                ? 'text-red-500 group-hover:text-red-700'
+                                                                : isDoc
+                                                                    ? 'text-green-500 group-hover:text-green-700'
+                                                                    : 'text-gray-400 group-hover:text-primary'
+                                                                }`}>arrow_forward</span>
                                                         </a>
                                                         {isAdmin && (
                                                             <button
@@ -1060,7 +1083,11 @@ const CoursePage: React.FC = () => {
                                             className={`
                                                 flex flex-col items-center justify-center gap-1 p-3 rounded-xl border transition-all w-20
                                                 ${newLink.icon === item.icon
-                                                    ? (item.icon === 'campaign' ? 'bg-red-50 border-red-500 text-red-600 dark:bg-red-900/20' : 'bg-primary/10 border-primary text-primary')
+                                                    ? (item.icon === 'campaign'
+                                                        ? 'bg-red-50 border-red-500 text-red-600 dark:bg-red-900/20'
+                                                        : item.icon === 'description'
+                                                            ? 'bg-green-50 border-green-500 text-green-600 dark:bg-green-900/20'
+                                                            : 'bg-primary/10 border-primary text-primary')
                                                     : 'bg-white dark:bg-[#1a202c] border-gray-200 dark:border-gray-700 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800'
                                                 }
                                             `}

@@ -16,6 +16,7 @@ import ForgotPasswordPage from './components/ForgotPasswordPage';
 import EmailConfirmationPage from './components/EmailConfirmationPage';
 import AdminPage from './components/AdminPage';
 
+import ResetPasswordPage from './components/ResetPasswordPage';
 import Layout from './components/Layout';
 import PrivateRoute from './components/PrivateRoute';
 
@@ -34,6 +35,7 @@ const App: React.FC = () => {
                         <Route path="/login" element={<LoginPage />} />
                         <Route path="/register" element={<RegisterPage />} />
                         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                        <Route path="/reset-password" element={<ResetPasswordPage />} />
                         <Route path="/email-confirmed" element={<EmailConfirmationPage />} />
 
                         {/* Planner público */}
