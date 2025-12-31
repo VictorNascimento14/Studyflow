@@ -36,3 +36,8 @@ export interface CourseNote {
   color: NoteColor;
   rotationClass: string;
 }
+
+export interface UnitLink {
+  title: string;
+  url: string;
+}

@@ -1,6 +1,6 @@
 
 import { supabase } from './supabaseClient';
-import type { Subject, CourseNote } from '../types';
+import type { Subject, CourseNote, UnitLink } from '../types';
 
 
 
@@ -207,5 +207,46 @@ export const dataService = {
                 .eq('unit_id', unitId);
             if (error) throw error;
         }
+    },
+
+    async updateUnitSummary(unitId: string, summary: string) {
+        const { error } = await supabase
+            .from('course_units')
+            .update({ summary })
+            .eq('id', unitId);
+        if (error) throw error;
+    },
+
+    async updateUnitLinks(unitId: string, links: UnitLink[]) {
+        const { error } = await supabase
+            .from('course_units')
+            .update({ important_links: links })
+            .eq('id', unitId);
+        if (error) throw error;
+    },
+
+    async updateUnitOrder(updates: { id: string; order_index: number; parent_id?: string | null }[]) {
+        // Upsert is not ideal for batch updates of just one field if we want to be safe, 
+        // but Supabase JS doesn't have a bulk update for different values easily without RPC.
+        // We will loop for now or use upsert if we had all fields.
+        // Given the low number of items (usually < 50 per level), looping is acceptable or using rpc.
+        // Let's use a safe loop for MVP.
+
+        const { error } = await supabase.rpc('update_unit_order', { payload: updates });
+        if (error) {
+            // Fallback if RPC doesn't exist (I haven't created it).
+            // Let's just loop.
+            for (const update of updates) {
+                const payload: any = { order_index: update.order_index };
+                if (update.parent_id !== undefined) payload.parent_id = update.parent_id;
+
+                const { error: e } = await supabase
+                    .from('course_units')
+                    .update(payload)
+                    .eq('id', update.id);
+                if (e) throw e;
+            }
+        }
     }
 };
+

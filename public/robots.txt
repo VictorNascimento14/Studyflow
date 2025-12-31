@@ -1,0 +1,10 @@
+# robots.txt para StudyFlow
+User-agent: *
+Allow: /
+
+# Bloquear páginas sensíveis (ajuste conforme necessário)
+Disallow: /admin
+Disallow: /login
+Disallow: /register
+
+Sitemap: https://www.seusite.com.br/sitemap.xml

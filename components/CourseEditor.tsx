@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabaseClient';
+// ...nenhum import de quiz...
 
 interface CourseUnit {
     id: string;
@@ -23,6 +24,7 @@ interface CourseEditorProps {
 }
 
 const CourseEditor: React.FC<CourseEditorProps> = ({ courseId, courseName, onClose }) => {
+// ...nenhuma função de quiz...
     const [units, setUnits] = useState<CourseUnit[]>([]);
     const [loading, setLoading] = useState(true);
     const [expandedUnits, setExpandedUnits] = useState<Set<string>>(new Set());
@@ -38,6 +40,8 @@ const CourseEditor: React.FC<CourseEditorProps> = ({ courseId, courseName, onClo
     const [instructorName, setInstructorName] = useState('');
     const [instructorTitle, setInstructorTitle] = useState('');
     const [saving, setSaving] = useState(false);
+
+    // ...existing code...
 
     useEffect(() => {
         fetchUnits();
@@ -178,7 +182,6 @@ const CourseEditor: React.FC<CourseEditorProps> = ({ courseId, courseName, onClo
         switch (type) {
             case 'lesson': return 'menu_book';
             case 'video': return 'play_circle';
-            case 'quiz': return 'quiz';
             default: return 'folder';
         }
     };
@@ -187,7 +190,6 @@ const CourseEditor: React.FC<CourseEditorProps> = ({ courseId, courseName, onClo
         switch (type) {
             case 'lesson': return 'text-blue-500';
             case 'video': return 'text-red-500';
-            case 'quiz': return 'text-green-500';
             default: return 'text-yellow-500';
         }
     };
@@ -296,108 +298,102 @@ const CourseEditor: React.FC<CourseEditorProps> = ({ courseId, courseName, onClo
                                 </div>
                             ) : (
                                 <div className="space-y-1">
-                                    {units.map(unit => renderUnit(unit))}
+                                    {units.map(unit => (
+                                        <div key={unit.id}>
+                                            {renderUnit(unit)}
+                                            {/* ... */}
+                                        </div>
+                                    ))}
                                 </div>
+                            )}
+                            {showForm && (
+                                <form onSubmit={handleSave} className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Titulo *</label>
+                                        <input
+                                            type="text"
+                                            value={title}
+                                            onChange={(e) => setTitle(e.target.value)}
+                                            placeholder="Ex: Modulo 1 - Introducao"
+                                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#111418] focus:ring-2 focus:ring-primary/50"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Tipo</label>
+                                        <select
+                                            value={contentType}
+                                            onChange={(e) => setContentType(e.target.value)}
+                                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#111418]"
+                                        >
+                                            <option value="unit">Modulo/Unidade</option>
+                                            <option value="lesson">Aula</option>
+                                            <option value="video">Video</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Duracao</label>
+                                        <input
+                                            type="text"
+                                            value={duration}
+                                            onChange={(e) => setDuration(e.target.value)}
+                                            placeholder="Ex: 45min"
+                                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#111418]"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium mb-1">Descricao</label>
+                                        <textarea
+                                            value={description}
+                                            onChange={(e) => setDescription(e.target.value)}
+                                            placeholder="Descricao opcional..."
+                                            rows={2}
+                                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#111418] resize-none"
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-sm font-medium mb-1">Professor (opcional)</label>
+                                            <input
+                                                type="text"
+                                                value={instructorName}
+                                                onChange={(e) => setInstructorName(e.target.value)}
+                                                placeholder="Ex: Prof. Ana Silva"
+                                                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#111418]"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium mb-1">Titulo (opcional)</label>
+                                            <input
+                                                type="text"
+                                                value={instructorTitle}
+                                                onChange={(e) => setInstructorTitle(e.target.value)}
+                                                placeholder="Ex: Mestre em Fisica"
+                                                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#111418]"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-3 pt-2">
+                                        <button
+                                            type="submit"
+                                            disabled={saving || !title.trim()}
+                                            className="flex-1 py-2 bg-primary text-white rounded-lg font-bold hover:bg-blue-600 disabled:opacity-50"
+                                        >
+                                            {saving ? 'Salvando...' : 'Salvar'}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowForm(false)}
+                                            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                                        >
+                                            Cancelar
+                                        </button>
+                                    </div>
+                                </form>
                             )}
                         </>
                     )}
                 </div>
-
-                {/* Add/Edit Form Modal */}
-                {showForm && (
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center p-4">
-                        <div className="bg-white dark:bg-[#1a202c] rounded-xl p-6 w-full max-w-md">
-                            <h3 className="text-lg font-bold mb-4">
-                                {editingUnit ? 'Editar' : 'Nova'} Unidade
-                                {parentId && <span className="text-sm font-normal text-gray-500 ml-2">(sub-unidade)</span>}
-                            </h3>
-                            <form onSubmit={handleSave} className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Titulo *</label>
-                                    <input
-                                        type="text"
-                                        value={title}
-                                        onChange={(e) => setTitle(e.target.value)}
-                                        placeholder="Ex: Modulo 1 - Introducao"
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#111418] focus:ring-2 focus:ring-primary/50"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Tipo</label>
-                                    <select
-                                        value={contentType}
-                                        onChange={(e) => setContentType(e.target.value)}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#111418]"
-                                    >
-                                        <option value="unit">Modulo/Unidade</option>
-                                        <option value="lesson">Aula</option>
-                                        <option value="video">Video</option>
-                                        <option value="quiz">Quiz</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Duracao</label>
-                                    <input
-                                        type="text"
-                                        value={duration}
-                                        onChange={(e) => setDuration(e.target.value)}
-                                        placeholder="Ex: 45min"
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#111418]"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Descricao</label>
-                                    <textarea
-                                        value={description}
-                                        onChange={(e) => setDescription(e.target.value)}
-                                        placeholder="Descricao opcional..."
-                                        rows={2}
-                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#111418] resize-none"
-                                    />
-                                </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="block text-sm font-medium mb-1">Professor (opcional)</label>
-                                        <input
-                                            type="text"
-                                            value={instructorName}
-                                            onChange={(e) => setInstructorName(e.target.value)}
-                                            placeholder="Ex: Prof. Ana Silva"
-                                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#111418]"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium mb-1">Titulo (opcional)</label>
-                                        <input
-                                            type="text"
-                                            value={instructorTitle}
-                                            onChange={(e) => setInstructorTitle(e.target.value)}
-                                            placeholder="Ex: Mestre em Fisica"
-                                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#111418]"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="flex gap-3 pt-2">
-                                    <button
-                                        type="submit"
-                                        disabled={saving || !title.trim()}
-                                        className="flex-1 py-2 bg-primary text-white rounded-lg font-bold hover:bg-blue-600 disabled:opacity-50"
-                                    >
-                                        {saving ? 'Salvando...' : 'Salvar'}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowForm(false)}
-                                        className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-                                    >
-                                        Cancelar
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
             </div>
         </div>
     );

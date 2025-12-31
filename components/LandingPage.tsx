@@ -139,8 +139,8 @@ const LandingPage: React.FC = () => {
                             </p>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                            <div className="p-8 rounded-2xl bg-background-light dark:bg-[#101922] border border-gray-100 dark:border-[#2a3441] hover:border-primary/50 transition-colors group">
-                                <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-primary mb-6 group-hover:scale-110 transition-transform">
+                            <div className="p-8 rounded-2xl bg-background-light dark:bg-[#101922] border border-gray-100 dark:border-[#2a3441] transition-all duration-300 ease-[cubic-bezier(.4,1.6,.4,1)] group shadow-sm hover:shadow-2xl hover:scale-[1.06] focus-within:scale-[1.06] focus-within:shadow-2xl cursor-pointer hover:border-cyan-400 hover:shadow-[0_0_16px_2px_rgba(0,255,255,0.5)]">
+                                <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-primary mb-6 group-hover:scale-110 transition-transform shadow group-hover:shadow-lg">
                                     <span className="material-symbols-outlined text-2xl">schedule</span>
                                 </div>
                                 <h3 className="text-xl font-bold text-[#111418] dark:text-white mb-3">Planejamento Realista</h3>
@@ -148,8 +148,8 @@ const LandingPage: React.FC = () => {
                                     Insira suas horas livres reais. O algoritmo ajusta a carga de leitura e exercícios para caber no seu dia, sem promessas impossíveis.
                                 </p>
                             </div>
-                            <div className="p-8 rounded-2xl bg-background-light dark:bg-[#101922] border border-gray-100 dark:border-[#2a3441] hover:border-primary/50 transition-colors group">
-                                <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 mb-6 group-hover:scale-110 transition-transform">
+                            <div className="p-8 rounded-2xl bg-background-light dark:bg-[#101922] border border-gray-100 dark:border-[#2a3441] transition-all duration-300 ease-[cubic-bezier(.4,1.6,.4,1)] group shadow-sm hover:shadow-2xl hover:scale-[1.06] focus-within:scale-[1.06] focus-within:shadow-2xl cursor-pointer hover:border-cyan-400 hover:shadow-[0_0_16px_2px_rgba(0,255,255,0.5)]">
+                                <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 mb-6 group-hover:scale-110 transition-transform shadow group-hover:shadow-lg">
                                     <span className="material-symbols-outlined text-2xl">tune</span>
                                 </div>
                                 <h3 className="text-xl font-bold text-[#111418] dark:text-white mb-3">Totalmente Personalizável</h3>
@@ -157,8 +157,8 @@ const LandingPage: React.FC = () => {
                                     Defina quais dias da semana você pode estudar e priorize as matérias mais críticas. Você está no controle do seu plano.
                                 </p>
                             </div>
-                            <div className="p-8 rounded-2xl bg-background-light dark:bg-[#101922] border border-gray-100 dark:border-[#2a3441] hover:border-primary/50 transition-colors group">
-                                <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 mb-6 group-hover:scale-110 transition-transform">
+                            <div className="p-8 rounded-2xl bg-background-light dark:bg-[#101922] border border-gray-100 dark:border-[#2a3441] transition-all duration-300 ease-[cubic-bezier(.4,1.6,.4,1)] group shadow-sm hover:shadow-2xl hover:scale-[1.06] focus-within:scale-[1.06] focus-within:shadow-2xl cursor-pointer hover:border-cyan-400 hover:shadow-[0_0_16px_2px_rgba(0,255,255,0.5)]">
+                                <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 mb-6 group-hover:scale-110 transition-transform shadow group-hover:shadow-lg">
                                     <span className="material-symbols-outlined text-2xl">check_circle</span>
                                 </div>
                                 <h3 className="text-xl font-bold text-[#111418] dark:text-white mb-3">Acompanhamento Simples</h3>

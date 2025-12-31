@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { CourseNote, NoteColor } from '../types';
 import Navbar from './Navbar';
 import { useAuth } from '../contexts/AuthContext';
+import { useAdmin } from '../hooks/useAdmin';
 import { dataService } from '../services/dataService';
 import { supabase } from '../services/supabaseClient';
 
@@ -40,6 +41,7 @@ const noteColorPalette: Record<NoteColor, { colorClass: string; textColorClass: 
 
 const CoursePage: React.FC = () => {
     const { user } = useAuth();
+    const { isAdmin } = useAdmin();
 
     // Course selection state
     const [availableCourses, setAvailableCourses] = useState<AvailableCourse[]>([]);
@@ -121,8 +123,8 @@ const CoursePage: React.FC = () => {
             .order('order_index');
 
         if (!error && data) {
-            // Count "countable" units (lessons, videos, quizzes) - excluding folders
-            const count = data.filter(u => ['lesson', 'video', 'quiz'].includes(u.content_type)).length;
+            // Count "countable" units (lessons, videos) - excluindo folders e quizzes
+            const count = data.filter(u => ['lesson', 'video'].includes(u.content_type)).length;
             setTotalUnits(count);
 
             const tree = buildTree(data);
@@ -214,7 +216,6 @@ const CoursePage: React.FC = () => {
         switch (type) {
             case 'lesson': return 'menu_book';
             case 'video': return 'play_circle';
-            case 'quiz': return 'quiz';
             default: return 'folder';
         }
     };
@@ -223,7 +224,6 @@ const CoursePage: React.FC = () => {
         switch (type) {
             case 'lesson': return 'text-blue-500';
             case 'video': return 'text-red-500';
-            case 'quiz': return 'text-green-500';
             default: return 'text-yellow-500';
         }
     };
@@ -603,7 +603,7 @@ const CoursePage: React.FC = () => {
                                         </div>
 
                                         {/* Action Button */}
-                                        {['lesson', 'video', 'quiz'].includes(selectedUnit.content_type) && (
+                                        {['lesson', 'video'].includes(selectedUnit.content_type) && (
                                             <button
                                                 onClick={() => handleToggleComplete(selectedUnit)}
                                                 className={`flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold transition-all shadow-sm w-full md:w-auto ${completedUnitIds.has(selectedUnit.id)
@@ -680,6 +680,42 @@ const CoursePage: React.FC = () => {
                                             );
                                         })}
                                     </div>
+                                </div>
+
+                                {/* Resumo elaborado da unidade */}
+                                <div className="mt-12">
+                                    <div className="flex items-center mb-2">
+                                        <span className="material-symbols-outlined text-primary mr-2">description</span>
+                                        <h3 className="text-xl font-bold text-[#111418] dark:text-white">Resumo elaborado da unidade</h3>
+                                    </div>
+                                    <p className="text-sm text-gray-500 mb-4">Faça um resumo detalhado dos principais pontos desta unidade para facilitar sua revisão.</p>
+                                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-5 shadow-sm">
+                                        {isAdmin ? (
+                                            // Admin pode editar o resumo
+                                            <textarea
+                                                className="w-full min-h-[120px] bg-transparent text-gray-700 dark:text-gray-200 outline-none resize-vertical"
+                                                placeholder="Adicione aqui um resumo elaborado sobre o conteúdo desta unidade..."
+                                                // value={unitSummary}
+                                                // onChange={e => setUnitSummary(e.target.value)}
+                                            />
+                                        ) : (
+                                            // Usuário comum só visualiza
+                                            <p className="text-gray-700 dark:text-gray-200">Resumo disponível apenas para visualização. Entre em contato com o administrador para sugerir alterações.</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Links importantes de atividades da unidade */}
+                                <div className="mt-12">
+                                    <div className="flex items-center mb-2">
+                                        <span className="material-symbols-outlined text-primary mr-2">link</span>
+                                        <h3 className="text-xl font-bold text-[#111418] dark:text-white">Links importantes de atividades da unidade</h3>
+                                    </div>
+                                    <p className="text-sm text-gray-500 mb-4">Acesse rapidamente materiais, tarefas ou recursos relevantes desta unidade.</p>
+                                    <ul className="list-disc pl-6 space-y-2 text-gray-700 dark:text-gray-200">
+                                        <li><a href="#" className="text-primary underline hover:text-blue-700">Exemplo de link para atividade 1</a></li>
+                                        <li><a href="#" className="text-primary underline hover:text-blue-700">Exemplo de link para material complementar</a></li>
+                                    </ul>
                                 </div>
                             </div>
                         ) : (
