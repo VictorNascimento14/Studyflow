@@ -17,6 +17,7 @@ import EmailConfirmationPage from './components/EmailConfirmationPage';
 import AdminPage from './components/AdminPage';
 
 import ResetPasswordPage from './components/ResetPasswordPage';
+import AuthRedirectHandler from './components/AuthRedirectHandler';
 import Layout from './components/Layout';
 import PrivateRoute from './components/PrivateRoute';
 
@@ -30,6 +31,7 @@ const App: React.FC = () => {
             <AuthProvider>
                 {isLoading && <Preloader onComplete={() => setIsLoading(false)} />}
                 <HashRouter>
+                    <AuthRedirectHandler />
                     <Routes>
                         <Route path="/" element={<LandingPage />} />
                         <Route path="/login" element={<LoginPage />} />
