@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { CourseNote, NoteColor } from '../types';
+import type { CourseNote, NoteColor, UnitLink } from '../types';
 import Navbar from './Navbar';
 import { useAuth } from '../contexts/AuthContext';
 import { useAdmin } from '../hooks/useAdmin';
@@ -62,6 +62,88 @@ const CoursePage: React.FC = () => {
     const [currentNote, setCurrentNote] = useState<Partial<CourseNote> | null>(null);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+    // Admin content state
+    const [summaryText, setSummaryText] = useState('');
+    const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+    const [newLink, setNewLink] = useState<UnitLink>({ title: '', url: '' });
+    const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
+
+    // Organization State
+    const [isOrganizeModalOpen, setIsOrganizeModalOpen] = useState(false);
+    const [organizeCurrentLevel, setOrganizeCurrentLevel] = useState<CourseUnit[]>([]);
+    const [draggingItem, setDraggingItem] = useState<string | null>(null);
+
+    const fetchAvailableCourses = async () => {
+        const { data, error } = await supabase
+            .from('available_courses')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (!error && data) {
+            setAvailableCourses(data);
+        }
+        setLoading(false);
+    };
+
+    const buildTree = (flatUnits: CourseUnit[]): CourseUnit[] => {
+        const map = new Map<string, CourseUnit>();
+        const roots: CourseUnit[] = [];
+        flatUnits.forEach(unit => map.set(unit.id, { ...unit, children: [] }));
+        flatUnits.forEach(unit => {
+            const node = map.get(unit.id)!;
+            if (unit.parent_id && map.has(unit.parent_id)) {
+                map.get(unit.parent_id)!.children!.push(node);
+            } else {
+                roots.push(node);
+            }
+        });
+        return roots;
+    };
+
+    const fetchCourseUnits = async (courseId: string) => {
+        const { data, error } = await supabase
+            .from('course_units')
+            .select('*')
+            .eq('course_id', courseId)
+            .order('order_index');
+
+        if (!error && data) {
+            const count = data.filter(u => ['lesson', 'video'].includes(u.content_type)).length;
+            setTotalUnits(count);
+
+            const tree = buildTree(data);
+            setCourseUnits(tree);
+            // Auto-expand first level
+            const firstLevelIds = tree.map(u => u.id);
+            setExpandedUnits(new Set(firstLevelIds));
+        }
+    };
+
+    const fetchProgress = async (courseId: string) => {
+        if (!user) return;
+        try {
+            const completedIds = await dataService.getCourseProgress(user.id, courseId);
+            setCompletedUnitIds(new Set(completedIds));
+        } catch (error) {
+            console.error('Error fetching progress:', error);
+        }
+    };
+
+    const getRandomRotation = () => {
+        const rotations = ['rotate-1', '-rotate-1', 'rotate-2', '-rotate-2', 'rotate-0'];
+        return rotations[Math.floor(Math.random() * rotations.length)];
+    };
+
+    const fetchNotes = async (unitId: string) => {
+        if (!user) return;
+        try {
+            const data = await dataService.getLessonNotes(user.id, unitId);
+            setNotes(data.map(n => ({ ...n, rotationClass: getRandomRotation() })));
+        } catch (error) {
+            console.error('Error fetching notes:', error);
+        }
+    };
+
     // Load last selected course from local storage
     useEffect(() => {
         const lastCourseId = localStorage.getItem('lastSelectedCourseId');
@@ -70,11 +152,9 @@ const CoursePage: React.FC = () => {
             if (course) {
                 setSelectedCourse(course);
             } else {
-                // If stored course is not in available courses (e.g. deleted), show selector
                 setShowCourseSelector(true);
             }
         } else if (availableCourses.length > 0 && !selectedCourse && !loading) {
-            // No stored course, show selector
             setShowCourseSelector(true);
         }
     }, [availableCourses, loading]);
@@ -103,77 +183,107 @@ const CoursePage: React.FC = () => {
         }
     }, [selectedCourse, user]);
 
-    const fetchAvailableCourses = async () => {
-        const { data, error } = await supabase
-            .from('available_courses')
-            .select('*')
-            .order('created_at', { ascending: false });
-
-        if (!error && data) {
-            setAvailableCourses(data);
+    useEffect(() => {
+        if (selectedUnit) {
+            setSummaryText(selectedUnit.summary || '');
+            setSaveStatus('idle');
         }
-        setLoading(false);
-    };
+    }, [selectedUnit]);
 
-    const fetchCourseUnits = async (courseId: string) => {
-        const { data, error } = await supabase
-            .from('course_units')
-            .select('*')
-            .eq('course_id', courseId)
-            .order('order_index');
-
-        if (!error && data) {
-            // Count "countable" units (lessons, videos) - excluindo folders e quizzes
-            const count = data.filter(u => ['lesson', 'video'].includes(u.content_type)).length;
-            setTotalUnits(count);
-
-            const tree = buildTree(data);
-            setCourseUnits(tree);
-            // Auto-expand first level
-            const firstLevelIds = tree.map(u => u.id);
-            setExpandedUnits(new Set(firstLevelIds));
+    const handleSaveSummary = async () => {
+        if (!selectedUnit || !user) return;
+        setSaveStatus('saving');
+        try {
+            await dataService.updateUnitSummary(selectedUnit.id, summaryText);
+            setSelectedUnit({ ...selectedUnit, summary: summaryText });
+            // await fetchCourseUnits(selectedCourse!.id); // Optional refresh
+            setSaveStatus('success');
+            setTimeout(() => setSaveStatus('idle'), 5000);
+        } catch (error) {
+            console.error('Error saving summary:', error);
+            setSaveStatus('error');
         }
     };
 
-    const fetchProgress = async (courseId: string) => {
+    const handleAddLink = async () => {
+        if (!selectedUnit || !user) return;
+        if (!newLink.title || !newLink.url) return;
+
+        const currentLinks = selectedUnit.important_links || [];
+        const updatedLinks = [...currentLinks, newLink];
+
+        try {
+            await dataService.updateUnitLinks(selectedUnit.id, updatedLinks);
+            setSelectedUnit({ ...selectedUnit, important_links: updatedLinks });
+            setNewLink({ title: '', url: '' });
+            setIsLinkModalOpen(false);
+            await fetchCourseUnits(selectedCourse!.id);
+        } catch (error) {
+            console.error('Error saving link:', error);
+        }
+    };
+
+    const handleDeleteLink = async (index: number) => {
+        if (!selectedUnit || !user) return;
+        if (!confirm('Tem certeza que deseja remover este link?')) return;
+        const currentLinks = selectedUnit.important_links || [];
+        const updatedLinks = currentLinks.filter((_, i) => i !== index);
+        try {
+            await dataService.updateUnitLinks(selectedUnit.id, updatedLinks);
+            setSelectedUnit({ ...selectedUnit, important_links: updatedLinks });
+            await fetchCourseUnits(selectedCourse!.id);
+        } catch (error) {
+            console.error('Error deleting link:', error);
+        }
+    };
+
+    // Organization Handlers
+    const handleOpenOrganize = () => {
+        setIsOrganizeModalOpen(true);
+        setOrganizeCurrentLevel(courseUnits);
+    };
+
+    const handleDragStart = (e: React.DragEvent, id: string) => {
+        setDraggingItem(id);
+        e.dataTransfer.effectAllowed = 'move';
+    };
+
+    const handleSaveOrder = async () => {
         if (!user) return;
         try {
-            const completedIds = await dataService.getCourseProgress(user.id, courseId);
-            setCompletedUnitIds(new Set(completedIds));
+            const updates: { id: string; order_index: number; parent_id?: string | null }[] = [];
+
+            // Iterate columns (Roots)
+            organizeCurrentLevel.forEach((col, colIndex) => {
+                // Update column order
+                updates.push({
+                    id: col.id,
+                    order_index: colIndex
+                    // parent_id should be kept as is (likely null for roots)
+                });
+
+                // Iterate children
+                if (col.children) {
+                    col.children.forEach((child, childIndex) => {
+                        updates.push({
+                            id: child.id,
+                            order_index: childIndex,
+                            parent_id: col.id
+                        });
+                    });
+                }
+            });
+
+            await dataService.updateUnitOrder(updates);
+            await fetchCourseUnits(selectedCourse!.id);
+            alert('Alterações salvas com sucesso!');
         } catch (error) {
-            console.error('Error fetching progress:', error);
+            console.error('Error saving order:', error);
+            alert('Erro ao salvar ordem.');
         }
     };
 
-    const buildTree = (flatUnits: CourseUnit[]): CourseUnit[] => {
-        const map = new Map<string, CourseUnit>();
-        const roots: CourseUnit[] = [];
-        flatUnits.forEach(unit => map.set(unit.id, { ...unit, children: [] }));
-        flatUnits.forEach(unit => {
-            const node = map.get(unit.id)!;
-            if (unit.parent_id && map.has(unit.parent_id)) {
-                map.get(unit.parent_id)!.children!.push(node);
-            } else {
-                roots.push(node);
-            }
-        });
-        return roots;
-    };
 
-    const fetchNotes = async (unitId: string) => {
-        if (!user) return;
-        try {
-            const data = await dataService.getLessonNotes(user.id, unitId);
-            setNotes(data.map(n => ({ ...n, rotationClass: getRandomRotation() })));
-        } catch (error) {
-            console.error('Error fetching notes:', error);
-        }
-    };
-
-    const getRandomRotation = () => {
-        const rotations = ['rotate-1', '-rotate-1', 'rotate-2', '-rotate-2', 'rotate-0'];
-        return rotations[Math.floor(Math.random() * rotations.length)];
-    };
 
     const toggleExpand = (unitId: string) => {
         setExpandedUnits(prev => {
@@ -495,6 +605,15 @@ const CoursePage: React.FC = () => {
                                     </p>
                                 )}
                             </div>
+                            {isAdmin && (
+                                <button
+                                    onClick={handleOpenOrganize}
+                                    className="p-1.5 text-gray-400 hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                                    title="Organizar Estrutura"
+                                >
+                                    <span className="material-symbols-outlined text-lg">sort</span>
+                                </button>
+                            )}
                             <button
                                 onClick={() => { setSelectedCourse(null); setSelectedUnit(null); setCourseUnits([]); }}
                                 className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
@@ -689,33 +808,108 @@ const CoursePage: React.FC = () => {
                                         <h3 className="text-xl font-bold text-[#111418] dark:text-white">Resumo elaborado da unidade</h3>
                                     </div>
                                     <p className="text-sm text-gray-500 mb-4">Faça um resumo detalhado dos principais pontos desta unidade para facilitar sua revisão.</p>
-                                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-5 shadow-sm">
+                                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-5 shadow-sm space-y-2">
                                         {isAdmin ? (
-                                            // Admin pode editar o resumo
-                                            <textarea
-                                                className="w-full min-h-[120px] bg-transparent text-gray-700 dark:text-gray-200 outline-none resize-vertical"
-                                                placeholder="Adicione aqui um resumo elaborado sobre o conteúdo desta unidade..."
-                                                // value={unitSummary}
-                                                // onChange={e => setUnitSummary(e.target.value)}
-                                            />
+                                            <>
+                                                <textarea
+                                                    className="w-full min-h-[120px] bg-transparent text-gray-700 dark:text-gray-200 outline-none resize-vertical p-2 border border-dashed border-gray-300 dark:border-gray-700 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary"
+                                                    placeholder="Adicione aqui um resumo elaborado sobre o conteúdo desta unidade..."
+                                                    value={summaryText}
+                                                    onChange={e => setSummaryText(e.target.value)}
+                                                />
+                                                <div className="flex items-center gap-3">
+                                                    <button
+                                                        onClick={handleSaveSummary}
+                                                        className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-blue-600 disabled:opacity-50 transition-all flex items-center gap-2"
+                                                        disabled={saveStatus === 'saving' || summaryText === selectedUnit.summary}
+                                                    >
+                                                        {saveStatus === 'saving' ? (
+                                                            <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                        ) : (
+                                                            <span className="material-symbols-outlined text-lg">save</span>
+                                                        )}
+                                                        {saveStatus === 'saving' ? 'Salvando...' : 'Salvar Resumo'}
+                                                    </button>
+                                                    {saveStatus === 'success' && (
+                                                        <span className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-3 py-1.5 rounded-lg text-sm font-bold flex items-center animate-[fadeIn_0.3s_ease-out] border border-green-200 dark:border-green-800">
+                                                            <span className="material-symbols-outlined text-lg mr-1.5">check_circle</span>
+                                                            Salvo com sucesso!
+                                                        </span>
+                                                    )}
+                                                    {saveStatus === 'error' && (
+                                                        <span className="text-red-500 text-sm font-bold flex items-center animate-[fadeIn_0.3s_ease-out]">
+                                                            <span className="material-symbols-outlined text-lg mr-1">error</span>
+                                                            Erro ao salvar
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </>
                                         ) : (
-                                            // Usuário comum só visualiza
-                                            <p className="text-gray-700 dark:text-gray-200">Resumo disponível apenas para visualização. Entre em contato com o administrador para sugerir alterações.</p>
+                                            <p className="text-gray-700 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
+                                                {selectedUnit.summary || "Resumo disponível apenas para visualização. Entre em contato com o administrador para sugerir alterações."}
+                                            </p>
                                         )}
                                     </div>
                                 </div>
 
                                 {/* Links importantes de atividades da unidade */}
                                 <div className="mt-12">
-                                    <div className="flex items-center mb-2">
-                                        <span className="material-symbols-outlined text-primary mr-2">link</span>
-                                        <h3 className="text-xl font-bold text-[#111418] dark:text-white">Links importantes de atividades da unidade</h3>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center">
+                                            <span className="material-symbols-outlined text-primary mr-2">link</span>
+                                            <h3 className="text-xl font-bold text-[#111418] dark:text-white">Links importantes</h3>
+                                        </div>
+                                        {isAdmin && (
+                                            <button
+                                                onClick={() => setIsLinkModalOpen(true)}
+                                                className="text-sm font-bold text-primary hover:text-blue-600 flex items-center gap-1 bg-primary/10 px-3 py-1.5 rounded-lg transition-colors"
+                                            >
+                                                <span className="material-symbols-outlined text-lg">add</span>
+                                                Adicionar Link
+                                            </button>
+                                        )}
                                     </div>
                                     <p className="text-sm text-gray-500 mb-4">Acesse rapidamente materiais, tarefas ou recursos relevantes desta unidade.</p>
-                                    <ul className="list-disc pl-6 space-y-2 text-gray-700 dark:text-gray-200">
-                                        <li><a href="#" className="text-primary underline hover:text-blue-700">Exemplo de link para atividade 1</a></li>
-                                        <li><a href="#" className="text-primary underline hover:text-blue-700">Exemplo de link para material complementar</a></li>
-                                    </ul>
+
+                                    {(selectedUnit.important_links && selectedUnit.important_links.length > 0) ? (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            {selectedUnit.important_links.map((link, index) => (
+                                                <div key={index} className="relative group">
+                                                    <a
+                                                        href={link.url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="flex items-center p-4 bg-white dark:bg-[#1a202c] border border-gray-200 dark:border-gray-700 rounded-xl hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300 w-full"
+                                                    >
+                                                        <div className="size-10 rounded-full bg-primary/10 text-primary flex items-center justify-center mr-4 group-hover:bg-primary group-hover:text-white transition-colors">
+                                                            <span className="material-symbols-outlined">link</span>
+                                                        </div>
+                                                        <div className="flex-1 min-w-0 text-left">
+                                                            <h4 className="font-bold text-sm text-gray-800 dark:text-gray-200 truncate group-hover:text-primary transition-colors">{link.title}</h4>
+                                                            <p className="text-xs text-gray-500 truncate mt-0.5">Clique para acessar</p>
+                                                        </div>
+                                                        <span className="material-symbols-outlined text-gray-400 group-hover:text-primary group-hover:translate-x-1 transition-all">arrow_forward</span>
+                                                    </a>
+                                                    {isAdmin && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                handleDeleteLink(index);
+                                                            }}
+                                                            className="absolute -top-2 -right-2 bg-red-500 text-white p-1.5 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 z-10"
+                                                            title="Remover link"
+                                                        >
+                                                            <span className="material-symbols-outlined text-xs font-bold leading-none">close</span>
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-6 bg-gray-50 dark:bg-gray-800/30 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
+                                            <span className="text-sm text-gray-400">Nenhum link adicionado ainda.</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         ) : (
@@ -798,6 +992,180 @@ const CoursePage: React.FC = () => {
                             >
                                 Salvar Anotação
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Link Modal */}
+            {isLinkModalOpen && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]">
+                    <div className="bg-white dark:bg-[#1a202c] rounded-2xl shadow-2xl w-full max-w-md border border-gray-200 dark:border-gray-700 animate-[slideIn_0.3s_ease-out]">
+                        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <h3 className="text-xl font-bold">Adicionar Link</h3>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5 block">Título do Link</label>
+                                <input
+                                    type="text"
+                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-[#111418] focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+                                    placeholder="Ex: Material Complementar"
+                                    value={newLink.title}
+                                    onChange={e => setNewLink({ ...newLink, title: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5 block">URL</label>
+                                <input
+                                    type="url"
+                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-[#111418] focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+                                    placeholder="https://"
+                                    value={newLink.url}
+                                    onChange={e => setNewLink({ ...newLink, url: e.target.value })}
+                                />
+                            </div>
+                        </div>
+                        <div className="p-4 bg-gray-50 dark:bg-[#151c24] border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3 rounded-b-2xl">
+                            <button
+                                onClick={() => setIsLinkModalOpen(false)}
+                                className="px-4 py-2 rounded-lg text-sm font-bold text-gray-600 hover:bg-gray-200 transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleAddLink}
+                                className="px-4 py-2 rounded-lg text-sm font-bold bg-primary text-white hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/20"
+                            >
+                                Adicionar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Organize Modal (Kanban Board) */}
+            {isOrganizeModalOpen && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]">
+                    <div className="bg-white dark:bg-[#1a202c] rounded-2xl shadow-2xl w-full max-w-6xl h-[85vh] border border-gray-200 dark:border-gray-700 animate-[slideIn_0.3s_ease-out] flex flex-col">
+                        <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-[#1a202c] rounded-t-2xl">
+                            <div>
+                                <h3 className="text-xl font-bold text-[#111418] dark:text-white">Organizar Curso (Visualização em Quadro)</h3>
+                                <p className="text-sm text-gray-500">Arraste as aulas entre os módulos ou reordene-as.</p>
+                            </div>
+                            <button onClick={() => setIsOrganizeModalOpen(false)} className="bg-gray-100 dark:bg-gray-700 p-2 rounded-full text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-x-auto overflow-y-hidden p-6 bg-gray-50 dark:bg-[#111418]">
+                            <div className="flex gap-6 h-full items-start min-w-max">
+                                {organizeCurrentLevel.map((column, colIndex) => (
+                                    <div
+                                        key={column.id}
+                                        className="w-80 flex flex-col max-h-full bg-gray-100/50 dark:bg-gray-800/30 rounded-xl border border-gray-200 dark:border-gray-700"
+                                        onDragOver={(e) => e.preventDefault()}
+                                        onDrop={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            if (!draggingItem) return;
+
+                                            // Handle Reparenting (Move to this column)
+                                            // Find the item anywhere in the tree (conceptually)
+                                            // For now, we search in organizeCurrentLevel (roots) and their children
+
+                                            // 1. Remove from old parent
+                                            const newData = [...organizeCurrentLevel];
+                                            let movedItem: CourseUnit | undefined;
+
+                                            // Helper to find and remove
+                                            const removeItem = (nodes: CourseUnit[]): boolean => {
+                                                const idx = nodes.findIndex(n => n.id === draggingItem);
+                                                if (idx !== -1) {
+                                                    [movedItem] = nodes.splice(idx, 1);
+                                                    return true;
+                                                }
+                                                for (const node of nodes) {
+                                                    if (node.children && removeItem(node.children)) return true;
+                                                }
+                                                return false;
+                                            };
+
+                                            if (!removeItem(newData)) return; // Not found?
+
+                                            // 2. Add to new parent (this column)
+                                            const targetCol = newData.find(c => c.id === column.id);
+                                            if (targetCol && movedItem) {
+                                                if (!targetCol.children) targetCol.children = [];
+                                                movedItem.parent_id = targetCol.id; // Update parent_id property logic locally
+                                                targetCol.children.push(movedItem);
+                                                setOrganizeCurrentLevel(newData);
+                                            }
+                                        }}
+                                    >
+                                        <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-t-xl sticky top-0 z-10">
+                                            <h4 className="font-bold text-[#111418] dark:text-white flex items-center gap-2">
+                                                <span className="material-symbols-outlined text-gray-400">folder</span>
+                                                {column.title}
+                                            </h4>
+                                            <p className="text-xs text-gray-500 mt-1">{column.children?.length || 0} itens</p>
+                                        </div>
+
+                                        <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-[100px]">
+                                            {column.children?.map((item, itemIndex) => (
+                                                <div
+                                                    key={item.id}
+                                                    draggable
+                                                    onDragStart={(e) => {
+                                                        e.stopPropagation();
+                                                        handleDragStart(e, item.id);
+                                                    }}
+                                                    onDragOver={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        // Simple reorder within same column logic handled by parent drop? 
+                                                        // Or specific logic here?
+                                                        // For MVP Kanban, let's just support Drag to Column (Append).
+                                                        // Reordering within column requires more precise Drop targets.
+                                                        // Let's allow reordering if we are in the same column.
+                                                        if (item.parent_id === column.id && draggingItem) {
+                                                            // Logic for reorder within column
+                                                            // ...
+                                                        }
+                                                    }}
+                                                    className={`
+                                                        p-3 bg-white dark:bg-gray-800 rounded-lg border shadow-sm cursor-move group
+                                                        ${draggingItem === item.id ? 'opacity-50 ring-2 ring-primary' : 'border-gray-200 dark:border-gray-700 hover:border-primary/50'}
+                                                    `}
+                                                >
+                                                    <div className="flex items-start gap-2">
+                                                        <span className="material-symbols-outlined text-gray-300 text-base mt-0.5">drag_indicator</span>
+                                                        <div className="flex-1">
+                                                            <p className="font-semibold text-sm text-gray-800 dark:text-gray-200 line-clamp-2">{item.title}</p>
+                                                            <span className="text-[10px] uppercase tracking-wider text-gray-400 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded mt-2 inline-block">
+                                                                {item.content_type === 'video' ? 'Vídeo' : 'Aula'}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            {(!column.children || column.children.length === 0) && (
+                                                <div className="h-20 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg flex items-center justify-center text-gray-400 text-xs text-center p-4">
+                                                    Arraste aulas para cá
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-[#1a202c] rounded-b-2xl">
+                            <p className="text-sm text-gray-500">Módulos também podem ser reordenados arrastando os cabeçalhos (em breve).</p>
+                            <div className="flex gap-3">
+                                <button onClick={() => setIsOrganizeModalOpen(false)} className="px-5 py-2.5 rounded-xl text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">Fechar</button>
+                                <button onClick={handleSaveOrder} className="px-5 py-2.5 rounded-xl text-sm font-bold bg-primary text-white hover:bg-blue-600 shadow-lg shadow-blue-500/20 transition-all">Salvar Alterações</button>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -71,7 +71,7 @@ const LoginPage: React.FC = () => {
                         </p>
                     </div>
 
-
+                    {/* Testimonial Section Redacted */}
                 </div>
 
                 {/* LADO DIREITO: Formulário */}
