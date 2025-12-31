@@ -19,10 +19,15 @@ import AdminPage from './components/AdminPage';
 import Layout from './components/Layout';
 import PrivateRoute from './components/PrivateRoute';
 
+import Preloader from './components/Preloader';
+
 const App: React.FC = () => {
+    const [isLoading, setIsLoading] = React.useState(true);
+
     return (
         <ThemeProvider>
             <AuthProvider>
+                {isLoading && <Preloader onComplete={() => setIsLoading(false)} />}
                 <HashRouter>
                     <Routes>
                         <Route path="/" element={<LandingPage />} />
