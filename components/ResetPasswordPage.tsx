@@ -101,8 +101,8 @@ const ResetPasswordPage: React.FC = () => {
                         <form onSubmit={handleUpdatePassword} className="space-y-5">
                             {message && (
                                 <div className={`p-4 rounded-2xl text-sm font-bold border-2 ${message.type === 'success'
-                                        ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800'
-                                        : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800'
+                                    ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800'
+                                    : 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800'
                                     }`}>
                                     {message.text}
                                 </div>
@@ -144,7 +144,7 @@ const ResetPasswordPage: React.FC = () => {
                         </form>
 
                         <div className="mt-8 text-center">
-                            <Link to="/login" className="text-xs font-black uppercase tracking-widest text-gray-500 hover:text-primary transition-colors">
+                            <Link to="/" className="text-xs font-black uppercase tracking-widest text-gray-500 hover:text-primary transition-colors">
                                 Cancelar
                             </Link>
                         </div>
