@@ -6,6 +6,7 @@ interface AuthContextType {
     user: User | null;
     session: Session | null;
     loading: boolean;
+    isPasswordRecovery: boolean;
     signOut: () => Promise<void>;
 }
 
@@ -15,6 +16,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [user, setUser] = useState<User | null>(null);
     const [session, setSession] = useState<Session | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
 
     useEffect(() => {
         // Check active sessions and sets the user
@@ -25,7 +27,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
 
         // Listen for changes on auth state (logged in, signed out, etc.)
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'PASSWORD_RECOVERY') {
+                setIsPasswordRecovery(true);
+            }
             setSession(session);
             setUser(session?.user ?? null);
             setLoading(false);
@@ -43,10 +48,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(null);
         setSession(null);
         setLoading(false);
+        setIsPasswordRecovery(false);
     };
 
     return (
-        <AuthContext.Provider value={{ user, session, loading, signOut }}>
+        <AuthContext.Provider value={{ user, session, loading, isPasswordRecovery, signOut }}>
             {children}
         </AuthContext.Provider>
     );

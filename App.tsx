@@ -23,13 +23,22 @@ import PrivateRoute from './components/PrivateRoute';
 
 import Preloader from './components/Preloader';
 
-const App: React.FC = () => {
-    const [isLoading, setIsLoading] = React.useState(true);
+import { useAuth } from './contexts/AuthContext';
+
+const AppContent: React.FC = () => {
+    const { loading: authLoading } = useAuth();
+    const [visualLoading, setVisualLoading] = React.useState(true);
 
     return (
-        <ThemeProvider>
-            <AuthProvider>
-                {isLoading && <Preloader onComplete={() => setIsLoading(false)} />}
+        <>
+            {visualLoading && <Preloader onComplete={() => setVisualLoading(false)} />}
+
+            {/* 
+                Only render Router when Auth is ready. 
+                This prevents HashRouter from consuming the hash parameters (magic link) 
+                before Supabase can parse them. 
+             */}
+            {!authLoading && (
                 <HashRouter>
                     <AuthRedirectHandler />
                     <Routes>
@@ -58,6 +67,16 @@ const App: React.FC = () => {
                         <Route path="*" element={<Navigate to="/" />} />
                     </Routes>
                 </HashRouter>
+            )}
+        </>
+    );
+};
+
+const App: React.FC = () => {
+    return (
+        <ThemeProvider>
+            <AuthProvider>
+                <AppContent />
             </AuthProvider>
         </ThemeProvider>
     );
